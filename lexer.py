@@ -12,11 +12,12 @@ tokens = (
     'RBRACE',
     'LBRACKET',
     'RBRACKET',
+    'FUNCTION',
+    'VARIABLE',
     'LITERAL',
     'CDATA',
-    'LCDATA',
-    'RCDATA',
-    'PERCENT',
+    'OCDATA',  # open CDATA mark (<<<)
+    'CCDATA',  # close CDATA mark (>>>)
 )
 
 states = (
@@ -24,7 +25,8 @@ states = (
 )
 
 def t_ESCAPE(t):
-    r'\\'
+    r'\\\\'
+    t.value = u'\\'
     return t
 
 def t_NEWLINE(t):
@@ -55,34 +57,38 @@ def t_RBRACKET(t):
     r'(?<=[^\\])\]'
     return t
 
-def t_LCDATA(t):
-    r'(?<=[^\\])%%%'
+def t_OCDATA(t):
+    r'<<<'
     t.lexer.push_state('cdata')
     return t
 
+def t_FUNCTION(t):
+    r'(?<=\\)[_A-Za-z][_0-9A-Za-z]*'
+    return t
+
+def t_VARIABLE(t):
+    r'\$[_A-Za-z][_0-9A-Za-z]*'
+    return t
+
 def t_LITERAL(t):
-    r'[^\s\\\{\}\[\]~]+'
+    r'[^\s\\\{\}\[\]\$~]+|\\<{1,3}(?!<)|\\<(?=<<<)|(?<=\\)~|(?<=\\)\{|(?<=\\)\}|(?<=\\)\[|(?<=\\)\]'
+    if t.value == u'\\<<<':
+        t.value = u'<<<'
     return t
 
 def t_error(t):
     print u"Illegal character '%s'" % t.value[0]
     t.lexer.skip(1)
 
-def t_cdata_ESCAPE(t):
-    r'\\'
-    return t
-
-def t_cdata_PERCENT(t):
-    r'(?<=\\)%|(?<=[^\\])%{1,2}(?!%)'
-    return t
-
-def t_cdata_RCDATA(t):
-    r'(?<=[^\\])%%%'
+def t_cdata_CCDATA(t):
+    r'(?<=[^\\])>>>'
     t.lexer.pop_state()
     return t
 
 def t_cdata_CDATA(t):
-    r'[^\\%]+'
+    r'[^>\\]+|\\>{,3}(?!>)|\\>(?=>>>)|(?<=[^\\])>{1,2}(?!>)'
+    if t.value == u'\\>>>':
+        t.value = u'>>>'
     return t
 
 def t_cdata_error(t):
@@ -96,3 +102,25 @@ def run_lexer(data):
     lexer = build_lexer()
     lexer.input(data)
     return list(lexer)
+
+data = u"""
+~ 这是注释
+  Hello, $name!
+\\ruby[まほう]{魔法} ~this is also a comment
+<<< \\ > >> \\> \\>> \\>>> \\>>>>
+<<< > >> \\\\ \\> \\>> \\>>> \\>>>>
+"""
+
+def _test():
+    print data
+    tokens = run_lexer(data)
+    for tok in tokens:
+        if isinstance(tok.value, unicode):
+            tok_str = "'" + tok.value.encode('utf-8') + "'"
+            tok_str = tok_str.replace('\\', '\\\\').replace('\n', '\\n')
+        else:
+            tok_str = str(tok.value)
+        print '%s.%-4s %-10s %s' % (tok.lineno, tok.lexpos, tok.type, tok_str)
+
+if __name__ == '__main__':
+    _test()
