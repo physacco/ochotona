@@ -11,6 +11,8 @@ tokens = (
     'CBRACE',      # close brace (})
     'OBRACKET',    # open bracket ([)
     'CBRACKET',    # close bracket (])
+    'OPAREN',      # open parentheses (()
+    'CPAREN',      # close parentheses ())
     'FUNCTION',
     'VARIABLE',
     'LITERAL',
@@ -51,13 +53,21 @@ def t_CBRACKET(t):
     r'\]'
     return t
 
+def t_OPAREN(t):
+    r'\('
+    return t
+
+def t_CPAREN(t):
+    r'\)'
+    return t
+
 def t_OCDATA(t):
     r'<<<'
     t.lexer.push_state('cdata')
     return t
 
 def t_FUNCTION(t):
-    r'(?<=\\)[_A-Za-z][_0-9A-Za-z]*'
+    r'\\[_A-Za-z][_0-9A-Za-z]*'
     return t
 
 def t_VARIABLE(t):
@@ -65,7 +75,7 @@ def t_VARIABLE(t):
     return t
 
 def t_LITERAL(t):
-    r'[^\s\\\{\}\[\]\$~]+|\\\\|\\{|\\}|\\[|\\]|\\~|\\<{1,3}(?!<)|\\<(?=<<<)'
+    r'[^\s\\\{\}\[\]\(\)\$~]+|\\[\\\{\}\[\]\(\)\$~]|\\<{1,3}(?!<)|\\<(?=<<<)'
     if t.value == u'\\\\':
         t.value = u'\\'
     elif t.value == u'\\{':
@@ -76,6 +86,12 @@ def t_LITERAL(t):
         t.value = u'['
     elif t.value == u'\\]':
         t.value = u']'
+    elif t.value == u'\\(':
+        t.value = u'('
+    elif t.value == u'\\)':
+        t.value = u')'
+    elif t.value == u'\\$':
+        t.value = u'$'
     elif t.value == u'\\~':
         t.value = u'~'
     elif t.value == u'\\<<<':
