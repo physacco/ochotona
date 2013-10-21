@@ -38,7 +38,7 @@ def t_SPACE(t):
     return t
 
 def t_COMMENT(t):
-    r'^~[^\n]*|(?<=[^\\])~[^\n]*'
+    r'~[^\r\n]*'
     return t
 
 def t_LBRACE(t):
@@ -71,9 +71,11 @@ def t_VARIABLE(t):
     return t
 
 def t_LITERAL(t):
-    r'[^\s\\\{\}\[\]\$~]+|\\<{1,3}(?!<)|\\<(?=<<<)|(?<=\\)~|(?<=\\)\{|(?<=\\)\}|(?<=\\)\[|(?<=\\)\]'
+    r'[^\s\\\{\}\[\]\$~]+|\\<{1,3}(?!<)|\\<(?=<<<)|\\~|(?<=\\)\{|(?<=\\)\}|(?<=\\)\[|(?<=\\)\]'
     if t.value == u'\\<<<':
         t.value = u'<<<'
+    elif t.value == u'\\~':
+        t.value = u'~'
     return t
 
 def t_error(t):

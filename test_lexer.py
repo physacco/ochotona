@@ -8,6 +8,29 @@ class LexerTest(unittest.TestCase):
         output = [(t.type, t.value) for t in lexer.run_lexer(input)]
         self.assertEqual(output, expect)
 
+    def test_comment1(self):
+        input = '~foo\nbar~baz\r\n'
+        tokens = [('COMMENT', '~foo'),
+                  ('NEWLINE', '\n'),
+                  ('LITERAL', 'bar'),
+                  ('COMMENT', '~baz'),
+                  ('NEWLINE', '\r\n')]
+        self.doLex(input, tokens)
+
+    def test_comment2(self):
+        input = '\\~foo\n\\\\~foo\n\\\\\\~foo\n'
+        tokens = [('LITERAL', u'~'),
+                  ('LITERAL', 'foo'),
+                  ('NEWLINE', '\n'),
+                  ('ESCAPE', u'\\'),
+                  ('COMMENT', '~foo'),
+                  ('NEWLINE', '\n'),
+                  ('ESCAPE', u'\\'),
+                  ('LITERAL', u'~'),
+                  ('LITERAL', 'foo'),
+                  ('NEWLINE', '\n')]
+        self.doLex(input, tokens)
+
     def test_cdata1(self):
         input = '<<<>>> <<<>>> '
         tokens = [('OCDATA', '<<<'),
