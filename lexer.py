@@ -4,30 +4,24 @@ import re
 import ply.lex as lex
 
 tokens = (
-    'ESCAPE',
     'NEWLINE',
     'SPACE',
     'COMMENT',
-    'LBRACE',
-    'RBRACE',
-    'LBRACKET',
-    'RBRACKET',
+    'OBRACE',      # open brace ({)
+    'CBRACE',      # close brace (})
+    'OBRACKET',    # open bracket ([)
+    'CBRACKET',    # close bracket (])
     'FUNCTION',
     'VARIABLE',
     'LITERAL',
     'CDATA',
-    'OCDATA',  # open CDATA mark (<<<)
-    'CCDATA',  # close CDATA mark (>>>)
+    'OCDATA',      # open CDATA mark (<<<)
+    'CCDATA',      # close CDATA mark (>>>)
 )
 
 states = (
     ('cdata', 'exclusive'),
 )
-
-def t_ESCAPE(t):
-    r'\\\\'
-    t.value = u'\\'
-    return t
 
 def t_NEWLINE(t):
     r'\r?\n'
@@ -41,20 +35,20 @@ def t_COMMENT(t):
     r'~[^\r\n]*'
     return t
 
-def t_LBRACE(t):
-    r'(?<=[^\\])\{'
+def t_OBRACE(t):
+    r'\{'
     return t
 
-def t_RBRACE(t):
-    r'(?<=[^\\])\}'
+def t_CBRACE(t):
+    r'\}'
     return t
 
-def t_LBRACKET(t):
-    r'(?<=[^\\])\['
+def t_OBRACKET(t):
+    r'\['
     return t
 
-def t_RBRACKET(t):
-    r'(?<=[^\\])\]'
+def t_CBRACKET(t):
+    r'\]'
     return t
 
 def t_OCDATA(t):
@@ -71,11 +65,21 @@ def t_VARIABLE(t):
     return t
 
 def t_LITERAL(t):
-    r'[^\s\\\{\}\[\]\$~]+|\\<{1,3}(?!<)|\\<(?=<<<)|\\~|(?<=\\)\{|(?<=\\)\}|(?<=\\)\[|(?<=\\)\]'
-    if t.value == u'\\<<<':
-        t.value = u'<<<'
+    r'[^\s\\\{\}\[\]\$~]+|\\\\|\\{|\\}|\\[|\\]|\\~|\\<{1,3}(?!<)|\\<(?=<<<)'
+    if t.value == u'\\\\':
+        t.value = u'\\'
+    elif t.value == u'\\{':
+        t.value = u'{'
+    elif t.value == u'\\}':
+        t.value = u'}'
+    elif t.value == u'\\[':
+        t.value = u'['
+    elif t.value == u'\\]':
+        t.value = u']'
     elif t.value == u'\\~':
         t.value = u'~'
+    elif t.value == u'\\<<<':
+        t.value = u'<<<'
     return t
 
 def t_error(t):

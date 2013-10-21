@@ -19,14 +19,14 @@ class LexerTest(unittest.TestCase):
 
     def test_comment2(self):
         input = '\\~foo\n\\\\~foo\n\\\\\\~foo\n'
-        tokens = [('LITERAL', u'~'),
+        tokens = [('LITERAL', '~'),
                   ('LITERAL', 'foo'),
                   ('NEWLINE', '\n'),
-                  ('ESCAPE', u'\\'),
+                  ('LITERAL', '\\'),
                   ('COMMENT', '~foo'),
                   ('NEWLINE', '\n'),
-                  ('ESCAPE', u'\\'),
-                  ('LITERAL', u'~'),
+                  ('LITERAL', '\\'),
+                  ('LITERAL', '~'),
                   ('LITERAL', 'foo'),
                   ('NEWLINE', '\n')]
         self.doLex(input, tokens)
@@ -43,11 +43,11 @@ class LexerTest(unittest.TestCase):
 
     def test_cdata2(self):
         input = '\\\\\\<<<>>> \\\\<<<>>> \\<<<>>> \\<<<<>>>'
-        tokens = [('ESCAPE', '\\'),
+        tokens = [('LITERAL', '\\'),
                   ('LITERAL', '<<<'),
                   ('LITERAL', '>>>'),
                   ('SPACE', ' '),
-                  ('ESCAPE', '\\'),
+                  ('LITERAL', '\\'),
                   ('OCDATA', '<<<'),
                   ('CCDATA', '>>>'),
                   ('SPACE', ' '),
